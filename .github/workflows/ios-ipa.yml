@@ -1,43 +1,69 @@
-name: Build iOS IPA
+name: Build Native Swift iOS IPA (Sideloadly)
 
 on:
   push:
-    branches: [ main, master ]
+    branches:
+      - main
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
-  build-ipa:
-    runs-on: macos-14
+  build-native-ios-ipa:
+    runs-on: macos-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Validate Info.plist
-        run: plutil -lint ios/StarlightBeautyStudio/Info.plist
-
-      - name: Build unsigned iOS app
+      - name: Validate Info.plist & Xcode version
         run: |
-          xcodebuild clean build \
+          xcodebuild -version
+          plutil -lint ios/StarlightBeautyStudio/Info.plist
+
+      - name: Build Pure Native iOS Release App (.app)
+        run: |
+          xcodebuild \
             -project ios/StarlightBeautyStudio.xcodeproj \
-            -target StarlightBeautyStudio \
+            -scheme StarlightBeautyStudio \
             -configuration Release \
             -sdk iphoneos \
-            CONFIGURATION_BUILD_DIR="$RUNNER_TEMP/ios_build" \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
+            -destination "generic/platform=iOS" \
+            -derivedDataPath ios/DerivedData \
             CODE_SIGNING_ALLOWED=NO \
-            AD_HOC_CODE_SIGNING_ALLOWED=YES
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGN_STYLE=Manual \
+            DEVELOPMENT_TEAM="" \
+            build
 
-      - name: Package IPA for Sideloadly
+      - name: Package Unsigned Native IPA for Sideloadly
         run: |
-          mkdir -p "$RUNNER_TEMP/ipa_stage/Payload"
-          cp -R "$RUNNER_TEMP/ios_build/StarlightBeautyStudio.app" "$RUNNER_TEMP/ipa_stage/Payload/"
-          cd "$RUNNER_TEMP/ipa_stage"
-          zip -r9 "$GITHUB_WORKSPACE/StarlightBeautyStudio.ipa" Payload
+          rm -rf ipa_build StarlightBeautyStudio-Sideloadly.ipa
+          mkdir -p ipa_build/Payload
+          cp -R ios/DerivedData/Build/Products/Release-iphoneos/StarlightBeautyStudio.app ipa_build/Payload/StarlightBeautyStudio.app
+          test -f ipa_build/Payload/StarlightBeautyStudio.app/Info.plist
+          test -f ipa_build/Payload/StarlightBeautyStudio.app/StarlightBeautyStudio
+          (cd ipa_build && zip -qr ../StarlightBeautyStudio-Sideloadly.ipa Payload)
+          ls -lh StarlightBeautyStudio-Sideloadly.ipa
 
-      - name: Upload IPA Artifact
+      - name: Upload Native IPA Workflow Artifact
         uses: actions/upload-artifact@v4
         with:
           name: StarlightBeautyStudio-IPA
-          path: StarlightBeautyStudio.ipa
-          if-no-files-found: error
+          path: StarlightBeautyStudio-Sideloadly.ipa
+          retention-days: 90
+
+      - name: Publish Native IPA to GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="ios-latest"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" StarlightBeautyStudio-Sideloadly.ipa --clobber
+          else
+            gh release create "$TAG" StarlightBeautyStudio-Sideloadly.ipa \
+              --title "Starlight Beauty Studio — Pure Native Swift iOS IPA (Sideloadly)" \
+              --notes "100% Native SwiftUI + CoreGraphics Canvas iOS build (arm64, zero WebView). Sign and sideload via Sideloadly."
+          fi
