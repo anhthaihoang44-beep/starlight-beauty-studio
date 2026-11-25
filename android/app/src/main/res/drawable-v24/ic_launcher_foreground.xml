@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Cute Sparkle Starlight Princess Icon -->
+    <path
+        android:fillColor="#FEF08A"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2.5"
+        android:pathData="M54,22 L61,44 L84,48 L61,54 L54,78 L47,54 L24,48 L47,44 Z" />
+    <!-- Little Princess Tiara Accent -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M37,38 L42,27 L49,34 L54,25 L59,34 L66,27 L71,38 Z" />
+    <!-- Pink Gem Heart Center -->
+    <path
+        android:fillColor="#EC4899"
+        android:pathData="M54,58 C47,53 46,46 50.5,45.5 C52.5,45.5 54,47.5 54,48.5 C54,47.5 55.5,45.5 57.5,45.5 C62,46 61,53 54,58 Z" />
+    <!-- Corner Sparkle Dots -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M78,30 a3.5,3.5 0 1,0 0,7 a3.5,3.5 0 1,0 0,-7" />
+    <path
+        android:fillColor="#BAE6FD"
+        android:pathData="M30,68 a3,3 0 1,0 0,6 a3,3 0 1,0 0,-6" />
+</vector>
